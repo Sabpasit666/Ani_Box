@@ -157,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('อนิเมะกำลังฉาย'),
+        title: const Text('อนิเมะ'),
         backgroundColor: Colors.deepPurple,
         centerTitle: true,
       ),
@@ -378,9 +378,8 @@ class _SearchScreenState extends State<SearchScreen> {
 
   List<dynamic> _searchResults = [];
   List<Map<String, dynamic>> _recentAnime = [];
-  List<dynamic> _suggestions = []; // ✅ เพิ่ม suggestions
+  List<dynamic> _suggestions = [];
   bool _loading = false;
-  int? _selectedYear;
 
   Timer? _debounce;
 
@@ -435,20 +434,9 @@ class _SearchScreenState extends State<SearchScreen> {
       setState(() => _loading = true);
       try {
         final results = await searchAnime(query);
-
-        // กรองปี
-        final filteredResults = _selectedYear == null
-            ? results
-            : results
-                  .where(
-                    (anime) =>
-                        anime['year'] != null && anime['year'] == _selectedYear,
-                  )
-                  .toList();
-
         setState(() {
-          _searchResults = filteredResults;
-          _suggestions = results.take(5).toList(); // เอา top 5 เป็น suggestions
+          _searchResults = results;
+          _suggestions = results.take(5).toList();
           _loading = false;
         });
       } catch (_) {
@@ -480,57 +468,22 @@ class _SearchScreenState extends State<SearchScreen> {
       ),
       body: Column(
         children: [
-          // แถวค้นหาพร้อมกรองปี
+          // TextField สำหรับค้นหา
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: TextField(
-                    controller: _controller,
-                    focusNode: _focusNode,
-                    onChanged: _onSearchChanged,
-                    decoration: const InputDecoration(
-                      hintText: 'พิมพ์ชื่ออนิเมะ...',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  flex: 1,
-                  child: DropdownButtonFormField<int?>(
-                    value: _selectedYear,
-                    decoration: const InputDecoration(
-                      labelText: 'ปี',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: [
-                      const DropdownMenuItem<int?>(
-                        value: null,
-                        child: Text('ทั้งหมด'),
-                      ),
-                      for (int year = DateTime.now().year; year >= 1980; year--)
-                        DropdownMenuItem<int?>(
-                          value: year,
-                          child: Text(year.toString()),
-                        ),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedYear = value;
-                      });
-                      _onSearchChanged(_controller.text);
-                    },
-                  ),
-                ),
-              ],
+            child: TextField(
+              controller: _controller,
+              focusNode: _focusNode,
+              onChanged: _onSearchChanged,
+              decoration: const InputDecoration(
+                hintText: 'พิมพ์ชื่ออนิเมะ...',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+              ),
             ),
           ),
 
-          // Suggestions แสดงใต้ TextField
+          // Suggestions
           if (_focusNode.hasFocus && _suggestions.isNotEmpty)
             Container(
               height: 150,
